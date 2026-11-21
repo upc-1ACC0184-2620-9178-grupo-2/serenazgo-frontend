@@ -10,13 +10,14 @@ export function crearMapa(el: HTMLElement, geo: Geo): L.Map {
   const area = L.latLngBounds(sw, ne);
   const map = L.map(el, {
     minZoom: 12, maxZoom: 19, zoomSnap: 0.5, zoomControl: true,
-    maxBounds: area.pad(0.6), maxBoundsViscosity: 0.85,   // no se sale de Ventanilla
+    maxBounds: area.pad(0.12), maxBoundsViscosity: 1,     // no se sale del área de Ventanilla (ni al mar)
     attributionControl: true,
   });
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
   }).addTo(map);
   L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map);
+  L.rectangle(area, { color: '#17254B', weight: 1.5, dashArray: '6 6', fill: false, interactive: false }).addTo(map);
   map.fitBounds(area);
   if (typeof ResizeObserver !== 'undefined') new ResizeObserver(() => map.invalidateSize()).observe(el);
   return map;

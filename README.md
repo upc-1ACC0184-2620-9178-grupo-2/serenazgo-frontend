@@ -20,8 +20,12 @@ Pruebas de integración (necesitan el backend en el puerto 8000): `npm test`.
 ## Mapa (Ventanilla, Callao)
 Los mapas usan **Leaflet + OpenStreetMap**, como Google Maps: se arrastra para mover, rueda/doble clic/botones para el zoom,
 escala en metros y botón **Centrar**. El movimiento está limitado al área de Ventanilla (`maxBounds`).
+- **Todo queda en tierra firme.** El área de operación (recuadro punteado, 8 × 5 km) está tierra adentro de Ventanilla:
+  lat -11.8375 a -11.8825 y lng -77.1368 a -77.0633, a ≈2 km del mar. `geo.ts` incluye la línea de costa real (puntos de playa
+  de OEFA y MINSA/DIGESA) y bloquea los clics en el mar o fuera del área. La prueba de integración verifica que la red vial,
+  las bases, los incidentes, los eventos y los serenazgos queden a ≥ 1 km de la costa.
 - `src/app/core/geo.ts` convierte las coordenadas del backend a latitud/longitud. Con la red **simulada** (km) el plano se ancla al
-  centro de Ventanilla (-11.875, -77.130); con la red **real** (`RED=osmnx` en el backend) usa las coordenadas reales sin cambios.
+  centro del área de operación (-11.860, -77.100); con la red **real** (`RED=osmnx` en el backend) usa las coordenadas reales sin cambios.
 - **Clic en una base** → popup con los serenazgos que tiene a cargo (por tipo, libres/ocupadas y sus eventos).
 - La red vial simulada se puede ver u ocultar en el control de capas del mapa (arriba a la derecha). Mientras la red sea simulada,
   las rutas dibujadas **no siguen las calles reales**; con OSMnx sí.

@@ -2,6 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient, withFetch } from '@angular/common/http';
 import { provideRouter, Router } from '@angular/router';
 import { App } from './app';
+import { crearGeo } from './core/geo';
+import { DespachoStore } from './core/despacho.store';
+import { PlanStore } from './core/plan.store';
 import { routes } from './app.routes';
 
 /** Prueba de integración: requiere el backend corriendo en http://127.0.0.1:8000 */
@@ -35,6 +38,15 @@ describe('Aplicativo de despacho (integración con el backend)', () => {
     await new Promise((r) => setTimeout(r, 200)); fx.detectChanges();
     expect(el.querySelector('#mapa .leaflet-popup-content')?.textContent).toMatch(/\d+ serenazgos a cargo/);
     console.log('POPUP:', el.querySelector('#mapa .leaflet-popup-content')?.textContent);
+
+    // nada puede estar en el mar: red vial, bases e incidentes quedan en tierra firme (≥ 1 km de la costa)
+    const st = TestBed.inject(DespachoStore);
+    const geo = crearGeo(st.red()!.limites);
+    const puntos = [...st.red()!.nodos.map(([x, y]) => [x, y]), ...st.red()!.bases.map((b) => [b.x, b.y]),
+      ...st.incidentes().map((i) => [i.x, i.y])];
+    const mar = puntos.filter(([x, y]) => { const [la, lo] = geo.aLatLng(x, y); return !geo.enTierra(la, lo, 1); });
+    expect(puntos.length).toBeGreaterThan(900);
+    expect(mar.length).toBe(0);
 
     const antes = el.querySelector('.sel-inc .id')?.textContent;
     (el.querySelectorAll('.item')[3] as HTMLElement).click();
@@ -89,6 +101,10 @@ describe('Plan de turno (integración con el backend)', () => {
     await pausa(fx, 300);
     expect(el.querySelector('app-plan-mapa-geo .leaflet-popup-content')?.textContent).toMatch(/\d+ serenazgos a cargo/);
     console.log('POPUP PLAN:', el.querySelector('app-plan-mapa-geo .leaflet-popup-content')?.textContent);
+    const ps = TestBed.inject(PlanStore), g2 = crearGeo(TestBed.inject(DespachoStore).red()!.limites);
+    const enMar = [...ps.vista()!.eventos.map((e) => [e.x, e.y]), ...ps.vista()!.serenazgos.map((s) => [s.x, s.y])]
+      .filter(([x, y]) => { const [la, lo] = g2.aLatLng(x, y); return !g2.enTierra(la, lo, 1); });
+    expect(enMar.length).toBe(0);
     const hora0 = el.querySelector('.reloj .hora')?.textContent;
 
     const btn = (txt: string) => [...el.querySelectorAll('button')].find((b) => b.textContent?.includes(txt)) as HTMLElement;
