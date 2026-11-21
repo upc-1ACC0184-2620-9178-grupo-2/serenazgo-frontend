@@ -51,6 +51,7 @@ export class App implements OnInit {
 
   nav = [
     { ruta: 'despacho', titulo: 'Despacho', d: 'M12 4a8 8 0 100 16 8 8 0 000-16z M12 8.5a3.5 3.5 0 100 7 3.5 3.5 0 000-7z M12 2v3M12 19v3M2 12h3M19 12h3' },
+    { ruta: 'plan', titulo: 'Plan de turno', d: 'M5 4h14v16H5z M5 9h14 M9 2v4 M15 2v4 M8 13h3 M8 16.5h6' },
     { ruta: 'incidentes', titulo: 'Incidentes', d: 'M12 3l10 18H2L12 3z M12 10v5M12 18v.5' },
     { ruta: 'unidades', titulo: 'Unidades', d: 'M12 3l7 3v5c0 4.4-2.9 8-7 10-4.1-2-7-5.6-7-10V6l7-3z M9 12l2 2 4-4' },
     { ruta: 'rutas', titulo: 'Rutas', d: 'M6 15.5a2.5 2.5 0 100 5 2.5 2.5 0 000-5z M18 3.5a2.5 2.5 0 100 5 2.5 2.5 0 000-5z M8.5 18H15a3 3 0 000-6H9a3 3 0 010-6h6.5' },
