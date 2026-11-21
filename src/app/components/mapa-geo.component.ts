@@ -10,8 +10,8 @@ import { crearMapa, encuadrar, iconoBase, iconoEtiqueta, iconoEvento, popupBase,
 @Component({
   selector: 'app-mapa-geo',
   template: `<div #host class="mapa-geo" role="application"
-       aria-label="Mapa de Ventanilla con incidentes, bases y rutas recomendadas. Arrastra para mover y usa la rueda para acercar."></div>
-     <button class="btn mini centrar" type="button" (click)="centrar()" aria-label="Volver a encuadrar Ventanilla">Centrar</button>`,
+       aria-label="Mapa de Lima centrado en Ventanilla, con incidentes, bases y rutas recomendadas. Arrastra para mover y usa la rueda para acercar o alejar."></div>
+     <button class="btn mini centrar" type="button" (click)="centrar()" aria-label="Volver a centrar el mapa en Ventanilla">Centrar en Ventanilla</button>`,
 })
 export class MapaGeoComponent implements OnDestroy {
   store = inject(DespachoStore);

@@ -4,20 +4,35 @@ import { Geo } from '../core/geo';
 export const COLOR = { A: '#C62839', M: '#F2A71B', B: '#1F8F55' } as const;
 export type Prio = keyof typeof COLOR;
 
-/** Mapa tipo Google Maps (OpenStreetMap): arrastrar, zoom con rueda/doble clic/botones, escala. */
+/** Lima Metropolitana y Callao: el mapa se puede explorar libremente dentro de esta región. */
+const LIMA = L.latLngBounds([-12.55, -77.25], [-11.55, -76.65]);
+
+/**
+ * Mapa tipo Google Maps (OpenStreetMap): arrastrar, zoom con rueda/doble clic/botones, escala.
+ * Muestra toda Lima, pero arranca encuadrado en Ventanilla (zona de operación) y la resalta.
+ */
 export function crearMapa(el: HTMLElement, geo: Geo): L.Map {
   const [sw, ne] = geo.area;
   const area = L.latLngBounds(sw, ne);
   const map = L.map(el, {
-    minZoom: 12, maxZoom: 19, zoomSnap: 0.5, zoomControl: true,
-    maxBounds: area.pad(0.12), maxBoundsViscosity: 1,     // no se sale del área de Ventanilla (ni al mar)
-    attributionControl: true,
+    minZoom: 10, maxZoom: 19, zoomSnap: 0.5, zoomControl: true,
+    maxBounds: LIMA, maxBoundsViscosity: 0.9, attributionControl: true,
   });
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
   }).addTo(map);
   L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map);
-  L.rectangle(area, { color: '#17254B', weight: 1.5, dashArray: '6 6', fill: false, interactive: false }).addTo(map);
+
+  // enfoque: se atenúa todo lo que está fuera de la zona de operación de Ventanilla
+  const fuera: L.LatLngTuple[] = [[-14, -79], [-14, -75], [-10, -75], [-10, -79]];
+  const dentro: L.LatLngTuple[] = [[sw[0], sw[1]], [sw[0], ne[1]], [ne[0], ne[1]], [ne[0], sw[1]]];
+  L.polygon([fuera, dentro], { stroke: false, fillColor: '#17254B', fillOpacity: 0.16, interactive: false }).addTo(map);
+  L.rectangle(area, { color: '#17254B', weight: 2, dashArray: '6 6', fill: false, interactive: false }).addTo(map);
+  L.marker([ne[0], (sw[1] + ne[1]) / 2], {
+    interactive: false, keyboard: false,
+    icon: L.divIcon({ className: 'ev-ico', iconSize: [0, 0], html: '<div class="zona-lbl">Zona de operación · Ventanilla</div>' }),
+  }).addTo(map);
+
   map.fitBounds(area);
   if (typeof ResizeObserver !== 'undefined') new ResizeObserver(() => map.invalidateSize()).observe(el);
   return map;

@@ -75,7 +75,10 @@ export interface PlanMetricas {
   carga_max_h: number; carga_min_h: number; desviacion_carga_h: number; utilizacion_pct: number;
 }
 export interface PlanVista {
-  turno: { inicio: string; fin: string; horas: number; duracion_min: number; ahora_min: number; ahora: string; hora: string };
+  turno: {
+    inicio: string; fin: string; horas: number; duracion_min: number; ahora_min: number; ahora: string; hora: string;
+    tiempo_real: boolean; velocidad: number; zona_horaria: string; eventos_por_hora: number;
+  };
   estrategia: string; estrategias: { nombre: string; descripcion: string }[];
   serenazgos: PlanSerenazgo[]; eventos: PlanEvento[]; sin_cobertura: number[];
   bases: BaseDto[]; metricas: PlanMetricas;
@@ -89,4 +92,7 @@ export interface Redistribucion {
   cobertura_antes: number; cobertura_despues: number; tiempo_medio_antes: number; tiempo_medio_despues: number;
 }
 export type Comparacion = PlanMetricas & { descripcion: string };
-export interface NuevoEscenario { n_serenazgos: number; n_eventos: number; pct_programados: number; estrategia?: string; semilla?: number }
+export interface NuevoEscenario {
+  n_serenazgos: number; n_eventos: number; pct_programados?: number; estrategia?: string; semilla?: number;
+  tiempo_real: boolean; eventos_por_hora: number; velocidad?: number;
+}

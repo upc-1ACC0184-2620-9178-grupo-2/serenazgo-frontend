@@ -7,6 +7,8 @@ import {
 } from './models';
 import { ToastService } from './toast.service';
 
+const PRIORIDAD_TXT = { A: 'Alta', M: 'Media', B: 'Baja' } as const;
+
 export interface SimulacionPendiente { tipo: 'cancelar_evento' | 'baja_serenazgo'; evento_id?: number; serenazgo_id?: number }
 
 /** Estado de la pantalla "Plan de turno" (signals). */
@@ -30,6 +32,14 @@ export class PlanStore {
   readonly filtro = signal<string>('todos');
   readonly mostrarTodos = signal(false);
   readonly error = signal<string | null>(null);
+  readonly horaViva = signal('');                           // HH:MM:SS que avanza cada segundo
+
+  private t0 = Date.now();                                  // cuándo llegó la última vista
+  private vistos = new Map<number, string>();               // evento → último estado visto
+  private cargaInicial = true;
+  private ocupado = false;
+  private reloj?: ReturnType<typeof setInterval>;
+  private sondeo?: ReturnType<typeof setInterval>;
 
   readonly eventosPorId = computed(() => new Map((this.vista()?.eventos ?? []).map((e) => [e.id, e])));
   readonly serenazgosPorId = computed(() => new Map((this.vista()?.serenazgos ?? []).map((s) => [s.id, s])));
@@ -73,10 +83,66 @@ export class PlanStore {
     });
   }
   async refrescar(): Promise<void> {
-    this.vista.set(await firstValueFrom(this.api.plan()));
+    this.aplicar(await firstValueFrom(this.api.plan()), false);
     const s = this.sel();
     if (s != null && this.serenazgosPorId().has(s)) await this.cargarRuta(s); else this.ruta.set([]);
   }
+  /** Guarda la vista y, si llegaron eventos o cancelaciones nuevas, avisa (solo en el sondeo automático). */
+  private aplicar(v: PlanVista, avisar: boolean): void {
+    if (avisar && !this.cargaInicial) {
+      const nuevos = v.eventos.filter((e) => !this.vistos.has(e.id) && !e.programado);
+      const cancelados = v.eventos.filter((e) => e.estado === 'cancelado' && this.vistos.has(e.id) && this.vistos.get(e.id) !== 'cancelado');
+      const etq = (id: number | null) => (id == null ? 'sin unidad' : (v.serenazgos.find((s) => s.id === id)?.etiqueta ?? `#${id}`));
+      if (nuevos.length === 1) {
+        const e = nuevos[0];
+        this.toast.mostrar(`Nuevo: #${e.id} ${e.tipologia} (${PRIORIDAD_TXT[e.prioridad]}) → ${etq(e.serenazgo_id)}`, e.estado === 'sin_cobertura');
+      } else if (nuevos.length > 1) {
+        const altas = nuevos.filter((e) => e.prioridad === 'A').length;
+        this.toast.mostrar(`${nuevos.length} eventos nuevos (${altas} de prioridad alta)`);
+      } else if (cancelados.length) {
+        this.toast.mostrar(`Evento ${cancelados[0].id} cancelado y reasignado`);
+      }
+    }
+    v.eventos.forEach((e) => this.vistos.set(e.id, e.estado));
+    this.cargaInicial = false;
+    this.t0 = Date.now();
+    this.vista.set(v);
+    this.tick();
+  }
+
+  // ---- reloj y sondeo en vivo ----
+  iniciarVivo(): void {
+    this.detenerVivo();
+    this.reloj = setInterval(() => this.tick(), 1000);
+    this.sondeo = setInterval(() => this.sondear(), 4000);
+  }
+  detenerVivo(): void {
+    clearInterval(this.reloj); clearInterval(this.sondeo);
+    this.reloj = this.sondeo = undefined;
+  }
+  private tick(): void {
+    const v = this.vista();
+    if (!v) return;
+    const extra = v.turno.tiempo_real ? (Date.now() - this.t0) / 60000 * v.turno.velocidad : 0;
+    const base = +v.turno.inicio.slice(11, 13) * 3600 + +v.turno.inicio.slice(14, 16) * 60;
+    const tot = Math.floor(base + (v.turno.ahora_min + extra) * 60);
+    const f = (n: number) => String(n).padStart(2, '0');
+    this.horaViva.set(`${f(Math.floor(tot / 3600) % 24)}:${f(Math.floor(tot % 3600 / 60))}:${f(tot % 60)}`);
+  }
+  /** En tiempo real pide el plan cada pocos segundos: llegan los eventos nuevos y se reasigna solo. */
+  private async sondear(): Promise<void> {
+    const v = this.vista();
+    if (!v?.turno.tiempo_real || this.ocupado || this.cargando()) return;
+    this.ocupado = true;
+    try {
+      this.aplicar(await firstValueFrom(this.api.plan()), true);
+      const s = this.sel();
+      if (s != null && this.serenazgosPorId().has(s)) await this.cargarRuta(s);
+      this.error.set(null);
+    } catch (e) { this.error.set(this.msg(e)); }
+    finally { this.ocupado = false; }
+  }
+
   private async cargarRuta(sid: number): Promise<void> {
     this.ruta.set((await firstValueFrom(this.api.planRuta(sid))).ruta);
   }
@@ -92,13 +158,22 @@ export class PlanStore {
   }
   seleccionarEvento(id: number | null): void { this.selEvento.set(id); }
 
-  nuevoEscenario(n_serenazgos: number, n_eventos: number, pct: number): Promise<void> {
+  nuevoEscenario(n_serenazgos: number, n_eventos: number, pct: number, tiempoReal = true, eventosPorHora = 40): Promise<void> {
     return this.tarea(async () => {
-      this.vista.set(await firstValueFrom(this.api.planEscenario({
-        n_serenazgos, n_eventos, pct_programados: pct / 100, semilla: Math.floor(Math.random() * 1000) })));
+      this.cargaInicial = true; this.vistos.clear();
+      this.aplicar(await firstValueFrom(this.api.planEscenario({
+        n_serenazgos, n_eventos, tiempo_real: tiempoReal, eventos_por_hora: eventosPorHora,
+        ...(tiempoReal ? {} : { pct_programados: pct / 100 }), semilla: Math.floor(Math.random() * 1000) })), false);
       this.sel.set(null); this.ruta.set([]); this.simulacion.set(null); this.comparacion.set(null);
       this.redistribucion.set(null); this.cambios.set(null);
       this.toast.mostrar('Nuevo escenario generado.');
+    });
+  }
+  cambiarVelocidad(velocidad: number): Promise<void> {
+    return this.tarea(async () => {
+      await firstValueFrom(this.api.planVelocidad(velocidad));
+      await this.refrescar();
+      this.toast.mostrar(velocidad === 1 ? 'Reloj en hora real.' : `Demo acelerada ×${velocidad}.`);
     });
   }
   avanzar(minutos: number): Promise<void> {
