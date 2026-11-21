@@ -4,11 +4,12 @@ import { MinutosPipe } from '../core/minutos.pipe';
 import { PRIORIDAD } from '../core/models';
 import { FormaComponent } from '../components/forma.component';
 import { MapaComponent } from '../components/mapa.component';
+import { MapaGeoComponent } from '../components/mapa-geo.component';
 
 /** Pantalla principal del operador (Figura 4 del informe). */
 @Component({
   selector: 'app-despacho-page',
-  imports: [MapaComponent, FormaComponent, MinutosPipe],
+  imports: [MapaComponent, MapaGeoComponent, FormaComponent, MinutosPipe],
   template: `
   @if (store.errorCarga(); as e) {
     <p class="card" role="alert">{{ e }}</p>
@@ -33,7 +34,7 @@ import { MapaComponent } from '../components/mapa.component';
               <button class="btn mini" type="button" (click)="store.restablecerRed()">Restablecer red</button>
             }
           </div>
-          <div id="mapa"><app-mapa /></div>
+          <div id="mapa"><app-mapa-geo /></div>
           <p class="sr">{{ descripcion() }}</p>
           <ul class="leyenda" aria-label="Leyenda del mapa">
             <li><app-forma p="A" [size]="14" /> Alta</li>

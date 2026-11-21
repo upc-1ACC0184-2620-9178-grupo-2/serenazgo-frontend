@@ -17,6 +17,17 @@ Pruebas de integración (necesitan el backend en el puerto 8000): `npm test`.
   línea de tiempo, cancelar y reasignar, redistribuir libres, "¿qué pasa si…?" y comparación de estrategias.
 - Incidentes, Unidades, Rutas y Reportes.
 
+## Mapa (Ventanilla, Callao)
+Los mapas usan **Leaflet + OpenStreetMap**, como Google Maps: se arrastra para mover, rueda/doble clic/botones para el zoom,
+escala en metros y botón **Centrar**. El movimiento está limitado al área de Ventanilla (`maxBounds`).
+- `src/app/core/geo.ts` convierte las coordenadas del backend a latitud/longitud. Con la red **simulada** (km) el plano se ancla al
+  centro de Ventanilla (-11.875, -77.130); con la red **real** (`RED=osmnx` en el backend) usa las coordenadas reales sin cambios.
+- **Clic en una base** → popup con los serenazgos que tiene a cargo (por tipo, libres/ocupadas y sus eventos).
+- La red vial simulada se puede ver u ocultar en el control de capas del mapa (arriba a la derecha). Mientras la red sea simulada,
+  las rutas dibujadas **no siguen las calles reales**; con OSMnx sí.
+- Los mosaicos vienen del servidor público de OpenStreetMap (uso moderado, con atribución). Para mucho tráfico usa un proveedor
+  propio (MapTiler, Stadia, etc.) cambiando la URL en `components/mapa-base.ts`.
+
 ## URL del backend (por qué "no conecta" al desplegar)
 - `src/environments/environment.ts` → desarrollo (`http://127.0.0.1:8000`).
 - `src/environments/environment.production.ts` → producción: **URL HTTPS pública del backend, sin puerto**
@@ -34,6 +45,7 @@ haz *Redeploy*.
 | core/api.service.ts | Cliente HTTP: una función por endpoint |
 | core/despacho.store.ts · core/plan.store.ts | Estado de cada pantalla (signals) y acciones |
 | core/models.ts | Interfaces TypeScript de la API |
-| components/mapa · plan-mapa · plan-timeline | Mapas SVG y línea de tiempo (Gantt) |
+| components/mapa-geo · plan-mapa-geo · mapa-base | Mapas Leaflet/OpenStreetMap (despacho y plan) |
+| components/mapa · plan-timeline | Minimapa SVG y línea de tiempo (Gantt) |
 | pages/*.page.ts | Despacho, Plan de turno, Incidentes, Unidades, Rutas, Reportes |
 | app.ts | Marco: navegación, cabecera, toast |

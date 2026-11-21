@@ -25,9 +25,16 @@ describe('Aplicativo de despacho (integración con el backend)', () => {
 
     expect(el.querySelectorAll('.item').length).toBe(50);
     expect(el.querySelectorAll('.base-card').length).toBe(3);
-    expect(el.querySelectorAll('#mapa .mk').length).toBe(50);
+    expect(el.querySelectorAll('#mapa .leaflet-container').length).toBe(1);   // mapa real (Leaflet)
+    expect(el.querySelectorAll('#mapa .ev').length).toBe(50);                   // un marcador por incidente
     expect(el.querySelector('.chip')?.textContent).toContain('1503');
     console.log('STATS:', el.querySelector('.stats')?.textContent?.replace(/\s+/g, ' '));
+
+    // clic en una base → muestra cuántas unidades tiene a cargo
+    (el.querySelector('#mapa .base-ico') as HTMLElement).click();
+    await new Promise((r) => setTimeout(r, 200)); fx.detectChanges();
+    expect(el.querySelector('#mapa .leaflet-popup-content')?.textContent).toMatch(/\d+ serenazgos a cargo/);
+    console.log('POPUP:', el.querySelector('#mapa .leaflet-popup-content')?.textContent);
 
     const antes = el.querySelector('.sel-inc .id')?.textContent;
     (el.querySelectorAll('.item')[3] as HTMLElement).click();
@@ -74,8 +81,14 @@ describe('Plan de turno (integración con el backend)', () => {
     expect(el.querySelector('h1')?.textContent).toBe('Plan de turno');
     expect(el.querySelector('.reloj .eyebrow')?.textContent).toContain('8 horas');
     expect(el.querySelectorAll('.agenda .item').length).toBeGreaterThan(10);
-    expect(el.querySelectorAll('app-plan-mapa .mk').length).toBeGreaterThan(100);       // eventos + 100 serenazgos
+    expect(el.querySelectorAll('app-plan-mapa-geo .leaflet-container').length).toBe(1);
+    expect(el.querySelectorAll('app-plan-mapa-geo .ev').length).toBeGreaterThan(50);                 // eventos
+    expect(el.querySelectorAll('app-plan-mapa-geo path.leaflet-interactive').length).toBe(100);     // 100 serenazgos
     expect(el.querySelectorAll('app-plan-timeline .fila').length).toBeGreaterThan(5);
+    (el.querySelector('app-plan-mapa-geo .base-ico') as HTMLElement).click();
+    await pausa(fx, 300);
+    expect(el.querySelector('app-plan-mapa-geo .leaflet-popup-content')?.textContent).toMatch(/\d+ serenazgos a cargo/);
+    console.log('POPUP PLAN:', el.querySelector('app-plan-mapa-geo .leaflet-popup-content')?.textContent);
     const hora0 = el.querySelector('.reloj .hora')?.textContent;
 
     const btn = (txt: string) => [...el.querySelectorAll('button')].find((b) => b.textContent?.includes(txt)) as HTMLElement;

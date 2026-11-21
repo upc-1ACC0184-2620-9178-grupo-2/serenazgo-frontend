@@ -1,7 +1,7 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { FormaComponent } from '../components/forma.component';
-import { PlanMapaComponent } from '../components/plan-mapa.component';
+import { PlanMapaGeoComponent } from '../components/plan-mapa-geo.component';
 import { PlanTimelineComponent } from '../components/plan-timeline.component';
 import { PlanStore } from '../core/plan.store';
 import { PRIORIDAD } from '../core/models';
@@ -17,7 +17,7 @@ const FILAS: [string, string][] = [
 /** Plan de turno: el día de trabajo de todos los serenazgos, que cambia con cada evento. */
 @Component({
   selector: 'app-plan-page',
-  imports: [FormsModule, FormaComponent, PlanMapaComponent, PlanTimelineComponent],
+  imports: [FormsModule, FormaComponent, PlanMapaGeoComponent, PlanTimelineComponent],
   template: `
   @if (store.vista(); as v) {
   <section class="vista plan" aria-label="Plan de turno">
@@ -97,7 +97,7 @@ const FILAS: [string, string][] = [
             <li><svg width="10" height="10"><circle cx="5" cy="5" r="4" class="u-baja"/></svg> baja</li>
           </ul>
         </div>
-        <div class="mapa-caja" [class.modo-ubicar]="store.modoAgregar()"><app-plan-mapa /></div>
+        <div class="mapa-caja" [class.modo-ubicar]="store.modoAgregar()"><app-plan-mapa-geo /></div>
         @if (store.redistribucion(); as r) {
           <p class="nota">Redistribución: {{ r.movimientos.length }} de {{ r.libres }} libres movidos · tiempo medio a la demanda
             {{ r.tiempo_medio_antes }} → <b>{{ r.tiempo_medio_despues }} min</b> · cobertura ≤10 min {{ r.cobertura_antes }}% → <b>{{ r.cobertura_despues }}%</b></p>
