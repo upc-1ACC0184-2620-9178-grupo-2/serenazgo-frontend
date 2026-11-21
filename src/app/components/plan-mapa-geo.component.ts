@@ -13,8 +13,8 @@ const COLOR_ESTADO: Record<string, string> = {
 @Component({
   selector: 'app-plan-mapa-geo',
   template: `<div #host class="mapa-geo" role="application"
-       aria-label="Mapa de Ventanilla con eventos y serenazgos. Arrastra para mover y usa la rueda para acercar."></div>
-     <button class="btn mini centrar" type="button" (click)="centrar()" aria-label="Volver a encuadrar Ventanilla">Centrar</button>`,
+       aria-label="Mapa de Lima centrado en Ventanilla, con eventos y serenazgos. Arrastra para mover y usa la rueda para acercar o alejar."></div>
+     <button class="btn mini centrar" type="button" (click)="centrar()" aria-label="Volver a centrar el mapa en Ventanilla">Centrar en Ventanilla</button>`,
 })
 export class PlanMapaGeoComponent implements OnDestroy {
   store = inject(PlanStore);

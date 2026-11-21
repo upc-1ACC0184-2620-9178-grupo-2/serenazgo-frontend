@@ -92,6 +92,24 @@ describe('Plan de turno (integración con el backend)', () => {
 
     expect(el.querySelector('h1')?.textContent).toBe('Plan de turno');
     expect(el.querySelector('.reloj .eyebrow')?.textContent).toContain('8 horas');
+
+    // por defecto el turno sigue la hora real de Lima y avanza solo
+    const lima = new Date(Date.now() - 5 * 3600 * 1000);                          // UTC-5
+    const minLima = lima.getUTCHours() * 60 + lima.getUTCMinutes();
+    const txt = el.querySelector('.reloj .hora')?.textContent ?? '';
+    expect(txt).toMatch(/^\d{2}:\d{2}:\d{2}$/);
+    const [hh, mm] = txt.split(':').map(Number);
+    expect(Math.min(Math.abs(hh * 60 + mm - minLima), 1440 - Math.abs(hh * 60 + mm - minLima))).toBeLessThanOrEqual(2);
+    expect(el.querySelector('.modo')?.textContent).toContain('EN VIVO');
+    await new Promise((r) => setTimeout(r, 2200)); fx.detectChanges();
+    expect(el.querySelector('.reloj .hora')?.textContent).not.toBe(txt);           // el reloj corre cada segundo
+    expect(el.querySelector('.actividad')).toBeTruthy();
+    console.log('EN VIVO:', txt, '->', el.querySelector('.reloj .hora')?.textContent, '|', el.querySelector('.modo')?.textContent);
+
+    // simulación manual para el resto de la prueba
+    await TestBed.inject(PlanStore).nuevoEscenario(100, 300, 50, false, 40);
+    await pausa(fx, 500);
+    expect(el.querySelector('.modo')?.textContent).toContain('SIMULADO');
     expect(el.querySelectorAll('.agenda .item').length).toBeGreaterThan(10);
     expect(el.querySelectorAll('app-plan-mapa-geo .leaflet-container').length).toBe(1);
     expect(el.querySelectorAll('app-plan-mapa-geo .ev').length).toBeGreaterThan(50);                 // eventos
@@ -128,7 +146,7 @@ describe('Plan de turno (integración con el backend)', () => {
     expect(el.querySelector('.nota')?.textContent).toContain('Redistribución');
 
     btn('Comparar estrategias').click();
-    await pausa(fx);
+    await esperar(fx, '.sim', 20000);                    // compara 3 estrategias: tarda unos segundos
     expect(el.querySelector('.sim')?.textContent).toContain('concentrada');
   }, 60000);
 });

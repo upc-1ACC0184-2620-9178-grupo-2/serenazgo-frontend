@@ -13,13 +13,13 @@ Pruebas de integración (necesitan el backend en el puerto 8000): `npm test`.
 
 ## Pantallas
 - **Despacho:** asignación 1 unidad ↔ 1 incidente (Figura 4 del informe).
-- **Plan de turno:** el día de 8 horas de 100+ serenazgos: reloj, mapa, agenda por serenazgo (eventos 1 y 2 → serenazgo 1…),
+- **Plan de turno (en vivo):** el reloj sigue la **hora real de Lima** (con segundos), la página se actualiza sola cada pocos segundos, los accidentes y demás eventos nuevos se integran al instante con un aviso, y el panel *Actividad en vivo* los lista. Hay modo *Demo ×10/×60/×300* y modo simulado manual. El día de 8 horas de 100+ serenazgos: reloj, mapa, agenda por serenazgo (eventos 1 y 2 → serenazgo 1…),
   línea de tiempo, cancelar y reasignar, redistribuir libres, "¿qué pasa si…?" y comparación de estrategias.
 - Incidentes, Unidades, Rutas y Reportes.
 
 ## Mapa (Ventanilla, Callao)
 Los mapas usan **Leaflet + OpenStreetMap**, como Google Maps: se arrastra para mover, rueda/doble clic/botones para el zoom,
-escala en metros y botón **Centrar**. El movimiento está limitado al área de Ventanilla (`maxBounds`).
+escala en metros y botón **Centrar**. Se puede explorar **toda Lima y el Callao** (alejando el zoom), pero el mapa arranca encuadrado en Ventanilla, la zona de operación se resalta (recuadro punteado, lo demás atenuado) y el botón **Centrar en Ventanilla** vuelve a ella. Los clics para ubicar eventos solo valen dentro de la zona.
 - **Todo queda en tierra firme.** El área de operación (recuadro punteado, 8 × 5 km) está tierra adentro de Ventanilla:
   lat -11.8375 a -11.8825 y lng -77.1368 a -77.0633, a ≈2 km del mar. `geo.ts` incluye la línea de costa real (puntos de playa
   de OEFA y MINSA/DIGESA) y bloquea los clics en el mar o fuera del área. La prueba de integración verifica que la red vial,

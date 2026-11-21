@@ -33,6 +33,7 @@ export class ApiService {
   // ---- Plan de turno ----
   plan = () => this.http.get<PlanVista>(this.url('/api/plan'));
   planEscenario = (b: NuevoEscenario) => this.http.post<PlanVista>(this.url('/api/plan/escenario'), b);
+  planVelocidad = (velocidad: number) => this.http.post<{ velocidad: number }>(this.url('/api/plan/velocidad'), { velocidad });
   planReloj = (minutos: number) =>
     this.http.post<{ hora: string; ahora_min: number; reasignados: Cambio[] }>(this.url('/api/plan/reloj'), { minutos });
   planEvento = (d: { tipologia: string; direccion: string; prioridad: Prioridad; x: number; y: number }) =>

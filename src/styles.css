@@ -232,3 +232,16 @@ app-forma{display:inline-flex;vertical-align:middle}
 .pop li{display:flex;justify-content:space-between;gap:16px;padding:2px 0;border-top:1px solid #E3E8F3}
 .pop-sub{margin:6px 0 0;color:#56627F;font-size:12px}
 .leaflet-popup-content{margin:12px 14px}
+
+.zona-lbl{transform:translate(-50%,-130%);background:#17254B;color:#fff;font-size:12px;font-weight:600;border-radius:13px;padding:3px 12px;white-space:nowrap;width:max-content;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.mapa-caja .centrar{white-space:nowrap}
+
+/* Tiempo real */
+.reloj .hora{font-variant-numeric:tabular-nums}
+.modo{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.04em;margin:2px 0 6px;padding:3px 10px;border-radius:999px;background:#E5E8F0;color:#56627F}
+.modo.vivo{background:#DDF3E7;color:#14532D}
+.modo.vivo::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#1F8F55;margin-right:6px;animation:latido 1.4s ease-in-out infinite}
+@keyframes latido{50%{opacity:.25}}
+.act{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:13px}
+.act li{padding:6px 10px;background:#F4F6FB;border-radius:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.act li b{font-variant-numeric:tabular-nums}

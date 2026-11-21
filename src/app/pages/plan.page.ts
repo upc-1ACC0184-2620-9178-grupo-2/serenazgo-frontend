@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { FormaComponent } from '../components/forma.component';
 import { PlanMapaGeoComponent } from '../components/plan-mapa-geo.component';
@@ -26,19 +26,32 @@ const FILAS: [string, string][] = [
     <article class="card plan-ctrl">
       <div class="reloj">
         <p class="eyebrow">Turno de {{ v.turno.horas }} horas · {{ v.turno.inicio.slice(0, 10) }}</p>
-        <p class="hora">{{ v.turno.hora }}</p>
+        <p class="hora" aria-label="Hora actual">{{ store.horaViva() || v.turno.hora }}</p>
+        <p class="modo" [class.vivo]="v.turno.tiempo_real">{{ modo() }}</p>
         <div class="barra" role="progressbar" aria-label="Avance del turno" aria-valuemin="0" aria-valuemax="100"
              [attr.aria-valuenow]="avance()"><i [style.width.%]="avance()"></i></div>
         <p class="sub">{{ store.hora(0) }} → {{ store.hora(v.turno.duracion_min) }}</p>
       </div>
       <div class="plan-btns">
-        <span class="lbl">Avanzar el reloj</span>
-        <div class="fila-btn">
-          @for (m of [15, 30, 60, 120]; track m) {
-            <button class="btn secundario" type="button" [disabled]="store.cargando()" (click)="store.avanzar(m)">+{{ m }} min</button>
-          }
-          <button class="btn secundario" type="button" [disabled]="store.cargando()" (click)="store.avanzar(resta())">Fin del turno</button>
-        </div>
+        @if (v.turno.tiempo_real) {
+          <label class="lbl" for="vel">Velocidad del reloj</label>
+          <div class="fila-btn">
+            <select id="vel" [ngModel]="v.turno.velocidad" (ngModelChange)="store.cambiarVelocidad(+$event)">
+              <option [ngValue]="1">Hora real (×1)</option><option [ngValue]="10">Demo ×10</option>
+              <option [ngValue]="60">Demo ×60</option><option [ngValue]="300">Demo ×300</option>
+            </select>
+          </div>
+          <p class="sub">El reloj sigue la hora de {{ v.turno.zona_horaria }}. Los accidentes y demás eventos llegan solos
+            (≈{{ v.turno.eventos_por_hora }} por hora) y el plan se reasigna al instante.</p>
+        } @else {
+          <span class="lbl">Avanzar el reloj (simulación)</span>
+          <div class="fila-btn">
+            @for (m of [15, 30, 60, 120]; track m) {
+              <button class="btn secundario" type="button" [disabled]="store.cargando()" (click)="store.avanzar(m)">+{{ m }} min</button>
+            }
+            <button class="btn secundario" type="button" [disabled]="store.cargando()" (click)="store.avanzar(resta())">Fin del turno</button>
+          </div>
+        }
       </div>
       <div class="plan-btns">
         <label class="lbl" for="estr">Estrategia</label>
@@ -66,10 +79,15 @@ const FILAS: [string, string][] = [
       <details class="plan-btns esc">
         <summary>Nuevo escenario</summary>
         <div class="fila-btn">
+          <label class="chk"><input type="checkbox" [(ngModel)]="tiempoReal"> Tiempo real</label>
           <label>Serenazgos <input type="number" min="1" max="500" [(ngModel)]="nSer"></label>
-          <label>Eventos <input type="number" min="0" max="1000" [(ngModel)]="nEv"></label>
-          <label>% en agenda <input type="number" min="0" max="100" [(ngModel)]="pctProg"></label>
-          <button class="btn secundario" type="button" [disabled]="store.cargando()" (click)="store.nuevoEscenario(nSer, nEv, pctProg)">Generar</button>
+          @if (tiempoReal) {
+            <label>Eventos por hora <input type="number" min="0" max="600" [(ngModel)]="eph"></label>
+          } @else {
+            <label>Eventos <input type="number" min="0" max="1000" [(ngModel)]="nEv"></label>
+            <label>% en agenda <input type="number" min="0" max="100" [(ngModel)]="pctProg"></label>
+          }
+          <button class="btn secundario" type="button" [disabled]="store.cargando()" (click)="store.nuevoEscenario(nSer, nEv, pctProg, tiempoReal, eph)">Generar</button>
         </div>
       </details>
     </article>
@@ -86,6 +104,17 @@ const FILAS: [string, string][] = [
       <div class="kpi"><b>{{ v.metricas.serenazgos_usados }} / {{ v.metricas.serenazgos_activos }}</b><span>Serenazgos con trabajo</span></div>
       <div class="kpi"><b>{{ v.metricas.carga_media_h }} h</b><span>Carga media (máx {{ v.metricas.carga_max_h }} h)</span></div>
     </dl>
+
+    <article class="card actividad">
+      <div class="card-cab"><h2>Actividad en vivo</h2><span class="cuenta">últimos eventos reportados</span></div>
+      <ul class="act">
+        @for (e of recientes(); track e.id) {
+          <li><b>{{ store.hora(e.reportado_min) }}</b> <app-forma [p]="e.prioridad" [size]="14" /> {{ e.tipologia }}
+            <span class="est" [class]="'est-' + e.estado">{{ e.estado }}</span>
+            @if (e.serenazgo_id) { → {{ store.etiqueta(e.serenazgo_id) }} }</li>
+        } @empty { <li>Aún no hay eventos en este turno.</li> }
+      </ul>
+    </article>
 
     <div class="plan-grid">
       <article class="card">
@@ -231,9 +260,9 @@ const FILAS: [string, string][] = [
     <p class="card" role="status">{{ store.error() ?? 'Cargando el plan del turno…' }}</p>
   }`,
 })
-export class PlanPage implements OnInit {
+export class PlanPage implements OnInit, OnDestroy {
   store = inject(PlanStore);
-  nSer = 100; nEv = 300; pctProg = 50;
+  nSer = 100; nEv = 300; pctProg = 50; eph = 40; tiempoReal = true;
   mostrarN = signal(30);
   estados = ESTADOS;
   filas = FILAS;
@@ -251,5 +280,15 @@ export class PlanPage implements OnInit {
   nombres = (o: object) => Object.keys(o);
   val = (m: object, k: string) => (m as Record<string, number>)[k];
 
-  ngOnInit(): void { this.store.cargar(); }
+  recientes = computed(() => [...(this.store.vista()?.eventos ?? [])]
+    .filter((e) => !e.programado).sort((a, b) => b.reportado_min - a.reportado_min).slice(0, 8));
+  modo = computed(() => {
+    const t = this.store.vista()?.turno;
+    if (!t) return '';
+    if (!t.tiempo_real) return 'SIMULADO';
+    return t.velocidad === 1 ? `EN VIVO · hora de ${t.zona_horaria}` : `DEMO ×${t.velocidad}`;
+  });
+
+  async ngOnInit(): Promise<void> { await this.store.cargar(); this.store.iniciarVivo(); }
+  ngOnDestroy(): void { this.store.detenerVivo(); }
 }
