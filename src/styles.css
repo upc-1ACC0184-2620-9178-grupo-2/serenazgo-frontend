@@ -164,3 +164,47 @@ dialog input,dialog select{min-height:44px;border:1px solid var(--borde);border-
 .fA{fill:var(--rojo)} .fM{fill:var(--ambar)} .fB{fill:var(--verde)}
 .mk .fA,.mk .fM,.mk .fB{stroke:#fff;stroke-width:2}
 app-forma{display:inline-flex;vertical-align:middle}
+
+/* ---------- Plan de turno ---------- */
+.plan{display:flex;flex-direction:column;gap:14px}
+.plan-ctrl{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;align-items:start}
+.reloj .hora{font-size:40px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.reloj .sub,.plan .sub{font-size:12px;color:var(--suave);margin-top:4px}
+.plan-btns .lbl{display:block;font-size:12px;font-weight:600;color:var(--suave);margin-bottom:6px}
+.fila-btn{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.plan select,.plan input[type=number]{min-height:44px;border:1px solid var(--borde);border-radius:10px;padding:0 10px;background:#fff}
+.plan input[type=number]{width:84px}
+.esc summary{cursor:pointer;font-weight:600;min-height:44px;display:flex;align-items:center}
+.esc label{display:flex;flex-direction:column;font-size:12px;gap:2px}
+.activo-btn{background:var(--navy)!important;color:#fff!important}
+.plan-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:0}
+.plan-kpis .kpi{margin:0}.plan-kpis .kpi b{font-size:22px}
+.kpi.alerta{background:#FDE4E7}.kpi.alerta b{color:#8E1A28}
+.plan-grid{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(280px,1fr);gap:14px;align-items:start}
+.plan .mapa-caja svg{display:block;width:100%;height:auto}
+.leyenda-plan{display:flex;gap:10px;list-style:none;margin:0;padding:0;font-size:12px;color:var(--suave)}
+.leyenda-plan li{display:flex;align-items:center;gap:4px}
+.u-libre{fill:#1F8F55;background:#1F8F55}.u-en_camino{fill:#F2A71B;background:#F2A71B}
+.u-atendiendo{fill:#C62839;background:#C62839}.u-baja{fill:#9AA3B5;background:#9AA3B5}
+.punto{width:12px;height:12px;border-radius:50%;display:inline-block}
+.item.ag{grid-template-columns:16px 1fr auto}
+.agenda .lista{max-height:420px}
+.detalle-ser{border-top:1px solid var(--borde);margin-top:12px;padding-top:10px}
+.detalle-ser h3{font-size:14px;margin:0 0 6px}
+.tareas{margin:0 0 10px;padding-left:18px;font-size:13px;max-height:180px;overflow:auto}
+.tareas .cancelada{color:var(--suave);text-decoration:line-through}
+.nota{font-size:13px;margin-top:10px;background:#F4F6FB;border-radius:10px;padding:8px 12px}
+.cambios{margin:6px 0 0;padding-left:18px;max-height:140px;overflow:auto}
+.sim table td:nth-child(n+2),.sim table th:nth-child(n+2){text-align:right}
+.chip-ev{display:inline-block;background:#EEF1F7;border-radius:999px;padding:2px 8px;margin:2px;font-size:12px}
+.gantt-caja{overflow:auto;max-height:420px}
+.gantt{width:100%;min-width:760px;display:block}
+.gantt .fila{cursor:pointer}.gantt .fila:hover rect:first-child{fill:#F1F4FA}
+.g-A{fill:var(--rojo)}.g-M{fill:var(--ambar)}.g-B{fill:var(--verde)}.g-rep{fill:#2F5597}.g-can{fill:#9AA3B5}
+.chk{font-size:13px;display:flex;gap:6px;align-items:center;min-height:44px}
+.est{font-size:12px;font-weight:600;border-radius:999px;padding:2px 10px;background:#EEF1F7}
+.est-atendido{background:#DDF3E7;color:#14532D}.est-cancelado{background:#E5E8F0;color:#56627F}
+.est-sin_cobertura{background:#FDE4E7;color:#8E1A28}.est-atendiendo,.est-en_camino{background:#FFF1C9;color:#5C4200}
+.mini-b{min-height:36px;padding:0 10px;font-size:12px;margin:2px}
+.sel-fila{background:#EEF3FD}
+@media (max-width:1180px){.plan-grid{grid-template-columns:1fr}}

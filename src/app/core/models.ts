@@ -49,3 +49,44 @@ export interface NuevoIncidente {
 export interface ParConfirmacion {
   incidente_id: string; unidad_id: number; tiempo: number; modificada: boolean;
 }
+
+// ---------------- Plan de turno ----------------
+export interface PlanTarea {
+  tipo: 'evento' | 'reposicion' | 'cancelada'; evento_id: number | null;
+  salida: number; llegada: number; inicio: number; fin: number; retraso: number; x: number; y: number;
+}
+export type EstadoSerenazgo = 'libre' | 'en_camino' | 'atendiendo' | 'baja';
+export interface PlanSerenazgo {
+  id: number; etiqueta: string; tipo: string; id_base: number; en_servicio: boolean;
+  estado: EstadoSerenazgo; x: number; y: number; eventos: number[]; carga_min: number;
+  utilizacion_pct: number; tareas: PlanTarea[];
+}
+export type EstadoEvento = 'asignado' | 'en_camino' | 'atendiendo' | 'atendido' | 'cancelado' | 'sin_cobertura';
+export interface PlanEvento {
+  id: number; tipologia: string; direccion: string; prioridad: Prioridad; x: number; y: number;
+  reportado_min: number; reportado_en: string; programado: boolean; duracion_min: number; plazo_min: number;
+  estado: EstadoEvento; serenazgo_id: number | null; llegada: number | null; inicio: number | null;
+  retraso: number | null; respuesta: number | null;
+}
+export interface PlanMetricas {
+  eventos_reportados: number; programados: number; atendidos: number; en_curso: number; asignados: number;
+  cancelados: number; sin_cobertura: number; retraso_total_min: number; respuesta_media_min: number;
+  pct_en_plazo: number; serenazgos_usados: number; serenazgos_activos: number; carga_media_h: number;
+  carga_max_h: number; carga_min_h: number; desviacion_carga_h: number; utilizacion_pct: number;
+}
+export interface PlanVista {
+  turno: { inicio: string; fin: string; horas: number; duracion_min: number; ahora_min: number; ahora: string; hora: string };
+  estrategia: string; estrategias: { nombre: string; descripcion: string }[];
+  serenazgos: PlanSerenazgo[]; eventos: PlanEvento[]; sin_cobertura: number[];
+  bases: BaseDto[]; metricas: PlanMetricas;
+}
+export interface Cambio { evento_id: number; de: number | null; a: number | null }
+export interface ResultadoSi {
+  tipo: string; descripcion: string; antes: PlanMetricas; despues: PlanMetricas; reasignados: Cambio[];
+}
+export interface Redistribucion {
+  libres: number; movimientos: { serenazgo_id: number; desde: number[]; hacia: number[]; minutos: number }[];
+  cobertura_antes: number; cobertura_despues: number; tiempo_medio_antes: number; tiempo_medio_despues: number;
+}
+export type Comparacion = PlanMetricas & { descripcion: string };
+export interface NuevoEscenario { n_serenazgos: number; n_eventos: number; pct_programados: number; estrategia?: string; semilla?: number }
