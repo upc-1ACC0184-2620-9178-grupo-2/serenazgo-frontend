@@ -39,6 +39,8 @@ export class PlanMapaGeoComponent implements OnDestroy {
       map.removeLayer(this.calles);                         // por defecto solo se ve el mapa real
       map.on('click', (e: L.LeafletMouseEvent) => {
         if (!this.store.modoAgregar()) return;
+        if (!g.dentro(e.latlng.lat, e.latlng.lng)) { this.store.toast.mostrar('Fuera del área de operación (recuadro punteado).', true); return; }
+        if (!g.enTierra(e.latlng.lat, e.latlng.lng, 1)) { this.store.toast.mostrar('Ahí hay mar: elige un punto en tierra firme.', true); return; }
         const [x, y] = g.aKm(e.latlng.lat, e.latlng.lng);
         this.store.agregarEvento(x, y);
       });
