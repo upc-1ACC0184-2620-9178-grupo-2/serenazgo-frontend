@@ -245,3 +245,4 @@ app-forma{display:inline-flex;vertical-align:middle}
 .act{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:13px}
 .act li{padding:6px 10px;background:#F4F6FB;border-radius:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .act li b{font-variant-numeric:tabular-nums}
+#minimapa svg{max-height:240px}

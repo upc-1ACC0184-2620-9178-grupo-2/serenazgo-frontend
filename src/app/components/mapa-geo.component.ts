@@ -25,7 +25,7 @@ export class MapaGeoComponent implements OnDestroy {
   private extra = L.layerGroup();
   private listo = signal(false);
 
-  geo = computed(() => { const r = this.store.red(); return r ? crearGeo(r.limites) : null; });
+  geo = computed(() => { const r = this.store.red(); return r ? crearGeo(r) : null; });
 
   constructor() {
     // crea el mapa cuando hay red vial
@@ -37,8 +37,7 @@ export class MapaGeoComponent implements OnDestroy {
       L.control.layers(undefined, { 'Red vial simulada': this.calles }, { collapsed: true, position: 'topright' }).addTo(map);
       map.on('click', (e: L.LeafletMouseEvent) => {
         if (!this.store.ubicando()) return;
-        if (!g.dentro(e.latlng.lat, e.latlng.lng)) { this.store.toast.mostrar('Fuera del área de operación (recuadro punteado).', true); return; }
-        if (!g.enTierra(e.latlng.lat, e.latlng.lng, 1)) { this.store.toast.mostrar('Ahí hay mar: elige un punto en tierra firme.', true); return; }
+        if (!g.dentro(e.latlng.lat, e.latlng.lng)) { this.store.toast.mostrar('Ese punto está fuera de Ventanilla (otro distrito o el mar).', true); return; }
         const [x, y] = g.aKm(e.latlng.lat, e.latlng.lng);
         this.store.puntoDesdeMapa(x, y);
       });
