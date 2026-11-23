@@ -27,7 +27,7 @@ export class PlanMapaGeoComponent implements OnDestroy {
   private unidades = L.layerGroup();
   private listo = signal(false);
 
-  geo = computed(() => { const r = this.store.base.red(); return r ? crearGeo(r.limites) : null; });
+  geo = computed(() => { const r = this.store.base.red(); return r ? crearGeo(r) : null; });
 
   constructor() {
     effect(() => {
@@ -39,8 +39,7 @@ export class PlanMapaGeoComponent implements OnDestroy {
       map.removeLayer(this.calles);                         // por defecto solo se ve el mapa real
       map.on('click', (e: L.LeafletMouseEvent) => {
         if (!this.store.modoAgregar()) return;
-        if (!g.dentro(e.latlng.lat, e.latlng.lng)) { this.store.toast.mostrar('Fuera del área de operación (recuadro punteado).', true); return; }
-        if (!g.enTierra(e.latlng.lat, e.latlng.lng, 1)) { this.store.toast.mostrar('Ahí hay mar: elige un punto en tierra firme.', true); return; }
+        if (!g.dentro(e.latlng.lat, e.latlng.lng)) { this.store.toast.mostrar('Ese punto está fuera de Ventanilla (otro distrito o el mar).', true); return; }
         const [x, y] = g.aKm(e.latlng.lat, e.latlng.lng);
         this.store.agregarEvento(x, y);
       });

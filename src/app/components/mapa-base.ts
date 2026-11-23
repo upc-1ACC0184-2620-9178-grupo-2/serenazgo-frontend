@@ -9,7 +9,7 @@ const LIMA = L.latLngBounds([-12.55, -77.25], [-11.55, -76.65]);
 
 /**
  * Mapa tipo Google Maps (OpenStreetMap): arrastrar, zoom con rueda/doble clic/botones, escala.
- * Muestra toda Lima, pero arranca encuadrado en Ventanilla (zona de operación) y la resalta.
+ * Muestra toda Lima, pero arranca encuadrado en Ventanilla y resalta su contorno oficial.
  */
 export function crearMapa(el: HTMLElement, geo: Geo): L.Map {
   const [sw, ne] = geo.area;
@@ -23,14 +23,16 @@ export function crearMapa(el: HTMLElement, geo: Geo): L.Map {
   }).addTo(map);
   L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map);
 
-  // enfoque: se atenúa todo lo que está fuera de la zona de operación de Ventanilla
+  // enfoque: se atenúa todo lo que está fuera del contorno real del distrito de Ventanilla
+  const contorno: L.LatLngTuple[] = geo.distrito ??
+    [[sw[0], sw[1]], [sw[0], ne[1]], [ne[0], ne[1]], [ne[0], sw[1]]];
   const fuera: L.LatLngTuple[] = [[-14, -79], [-14, -75], [-10, -75], [-10, -79]];
-  const dentro: L.LatLngTuple[] = [[sw[0], sw[1]], [sw[0], ne[1]], [ne[0], ne[1]], [ne[0], sw[1]]];
-  L.polygon([fuera, dentro], { stroke: false, fillColor: '#17254B', fillOpacity: 0.16, interactive: false }).addTo(map);
-  L.rectangle(area, { color: '#17254B', weight: 2, dashArray: '6 6', fill: false, interactive: false }).addTo(map);
-  L.marker([ne[0], (sw[1] + ne[1]) / 2], {
+  L.polygon([fuera, contorno], { stroke: false, fillColor: '#17254B', fillOpacity: 0.16, interactive: false }).addTo(map);
+  L.polygon(contorno, { color: '#17254B', weight: 2, dashArray: '6 6', fill: false, interactive: false }).addTo(map);
+  const norte = contorno.reduce((m, p) => (p[0] > m[0] ? p : m), contorno[0]);
+  L.marker([norte[0], norte[1]], {
     interactive: false, keyboard: false,
-    icon: L.divIcon({ className: 'ev-ico', iconSize: [0, 0], html: '<div class="zona-lbl">Zona de operación · Ventanilla</div>' }),
+    icon: L.divIcon({ className: 'ev-ico', iconSize: [0, 0], html: '<div class="zona-lbl">Distrito de Ventanilla</div>' }),
   }).addTo(map);
 
   map.fitBounds(area);

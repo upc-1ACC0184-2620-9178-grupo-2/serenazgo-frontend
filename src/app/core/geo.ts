@@ -1,32 +1,6 @@
-import { Limites } from './models';
+import { Red } from './models';
 
-/**
- * Centro del área de operación, en tierra firme de Ventanilla (Callao), tierra adentro de la costa.
- * El plano simulado (8 × 5 km) queda entre lat -11.8375 y -11.8825 y lng -77.1368 y -77.0633,
- * con ≈2 km de margen respecto al mar en el punto más cercano.
- */
-export const CENTRO_VENTANILLA: [number, number] = [-11.86, -77.1];
 const KM_POR_GRADO = 111.32;
-
-/**
- * Línea de costa real de Ventanilla, de sur a norte [lat, lng]: puntos de playa a nivel del mar
- * (OEFA: playas Ventanilla, Costa Azul y Los Delfines; MINSA/DIGESA: Costa Azul, Bahía Blanca, Hondable).
- * El mar queda al oeste de esta línea.
- */
-export const COSTA: [number, number][] = [
-  [-11.9347, -77.1399], [-11.9214, -77.1421], [-11.9058, -77.1459], [-11.8771, -77.1574],
-  [-11.8726, -77.159], [-11.8452, -77.1761], [-11.8355, -77.1847], [-11.8135, -77.1771],
-];
-
-/** Longitud de la costa a esa latitud (interpolación lineal entre los puntos de playa). */
-export function costaLng(lat: number): number {
-  if (lat <= COSTA[0][0]) return COSTA[0][1];
-  for (let i = 1; i < COSTA.length; i++) {
-    const [la0, lo0] = COSTA[i - 1], [la1, lo1] = COSTA[i];
-    if (lat <= la1) return lo0 + (lat - la0) / (la1 - la0) * (lo1 - lo0);
-  }
-  return COSTA[COSTA.length - 1][1];
-}
 
 export interface Geo {
   /** coordenadas del backend → [lat, lng] */
@@ -35,42 +9,48 @@ export interface Geo {
   aKm(lat: number, lng: number): [number, number];
   /** esquinas del área de trabajo [[sur, oeste], [norte, este]] */
   area: [[number, number], [number, number]];
-  /** true si el backend ya entrega coordenadas geográficas (red real OSMnx) */
-  real: boolean;
-  /** true si el punto está en tierra firme (al menos `margenKm` tierra adentro de la costa) */
-  enTierra(lat: number, lng: number, margenKm?: number): boolean;
-  /** true si el punto está dentro del área de operación */
+  /** contorno real del distrito de Ventanilla en [lat, lng] (null si no se conoce) */
+  distrito: [number, number][] | null;
+  /** true si el punto está dentro de Ventanilla (no en el mar ni en otro distrito) */
   dentro(lat: number, lng: number): boolean;
+}
+
+/** Punto en polígono (algoritmo del rayo). El polígono es [[lat, lng], ...]. */
+function enPoligono(lat: number, lng: number, poli: [number, number][]): boolean {
+  let dentro = false;
+  for (let i = 0, j = poli.length - 1; i < poli.length; j = i++) {
+    const [la1, lo1] = poli[i], [la2, lo2] = poli[j];
+    if ((la1 > lat) !== (la2 > lat) && lng < (lo2 - lo1) * (lat - la1) / (la2 - la1) + lo1) dentro = !dentro;
+  }
+  return dentro;
 }
 
 /**
  * Convierte las coordenadas del backend a mapa.
- * - Red simulada: el plano está en km; se ancla al centro de Ventanilla.
+ * - Red simulada: el plano está en km (x este, y sur) con origen en `anclaje`, el centro del distrito de
+ *   Ventanilla; la red, las bases y los eventos se generan solo dentro de su contorno oficial (IGN).
  * - Red real (OSMnx): x = longitud, y = -latitud; se usa tal cual.
  */
-export function crearGeo(L: Limites): Geo {
-  const real = L.xmax - L.xmin < 1 && L.ymax - L.ymin < 1;
-  if (real) {
+export function crearGeo(red: Red): Geo {
+  const L = red.limites;
+  if (!red.anclaje) {
     const area: [[number, number], [number, number]] = [[-L.ymax, L.xmin], [-L.ymin, L.xmax]];
     return {
-      real,
+      area, distrito: null,
       aLatLng: (x, y) => [-y, x],
       aKm: (lat, lng) => [lng, -lat],
-      area,
-      enTierra: () => true,                           // la red real de OSMnx solo tiene calles (tierra)
       dentro: (lat, lng) => lat >= area[0][0] && lat <= area[1][0] && lng >= area[0][1] && lng <= area[1][1],
     };
   }
-  const cx = (L.xmin + L.xmax) / 2, cy = (L.ymin + L.ymax) / 2;
-  const [lat0, lng0] = CENTRO_VENTANILLA;
+  const [lat0, lng0] = red.anclaje;
   const kmLng = KM_POR_GRADO * Math.cos(Math.abs(lat0) * Math.PI / 180);
-  const aLatLng = (x: number, y: number): [number, number] =>
-    [lat0 - (y - cy) / KM_POR_GRADO, lng0 + (x - cx) / kmLng];
+  const aLatLng = (x: number, y: number): [number, number] => [lat0 - y / KM_POR_GRADO, lng0 + x / kmLng];
+  const distrito = (red.distrito ?? []).map(([x, y]) => aLatLng(x, y));
   const sw = aLatLng(L.xmin, L.ymax), ne = aLatLng(L.xmax, L.ymin);
   return {
-    real, aLatLng, area: [sw, ne],
-    aKm: (lat, lng) => [cx + (lng - lng0) * kmLng, cy - (lat - lat0) * KM_POR_GRADO],
-    enTierra: (lat, lng, margenKm = 0.5) => lng >= costaLng(lat) + margenKm / kmLng,
-    dentro: (lat, lng) => lat >= sw[0] && lat <= ne[0] && lng >= sw[1] && lng <= ne[1],
+    aLatLng, distrito: distrito.length ? distrito : null, area: [sw, ne],
+    aKm: (lat, lng) => [(lng - lng0) * kmLng, (lat0 - lat) * KM_POR_GRADO],
+    dentro: (lat, lng) => (distrito.length ? enPoligono(lat, lng, distrito)
+      : lat >= sw[0] && lat <= ne[0] && lng >= sw[1] && lng <= ne[1]),
   };
 }

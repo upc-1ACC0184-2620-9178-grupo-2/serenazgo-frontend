@@ -10,6 +10,10 @@ export interface BaseDto { id: number; nombre: string; x: number; y: number }
 export interface Red {
   limites: Limites; nodos: number[][]; aristas: number[][]; bloqueados: number[][];
   bases: BaseDto[]; n_nodos: number; n_aristas: number;
+  /** (lat, lng) del origen del plano en km; null si el backend ya entrega coordenadas geográficas */
+  anclaje: [number, number] | null;
+  /** contorno del distrito de Ventanilla en coordenadas del plano */
+  distrito: number[][] | null;
 }
 export interface Incidente {
   id_caso: string; tipologia: string; direccion: string; prioridad: Prioridad;

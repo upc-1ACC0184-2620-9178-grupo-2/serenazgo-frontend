@@ -39,12 +39,15 @@ describe('Aplicativo de despacho (integración con el backend)', () => {
     expect(el.querySelector('#mapa .leaflet-popup-content')?.textContent).toMatch(/\d+ serenazgos a cargo/);
     console.log('POPUP:', el.querySelector('#mapa .leaflet-popup-content')?.textContent);
 
-    // nada puede estar en el mar: red vial, bases e incidentes quedan en tierra firme (≥ 1 km de la costa)
+    // nada puede salir de Ventanilla: red vial, bases e incidentes quedan dentro del contorno del distrito
     const st = TestBed.inject(DespachoStore);
-    const geo = crearGeo(st.red()!.limites);
+    const geo = crearGeo(st.red()!);
+    expect(geo.distrito!.length).toBeGreaterThan(100);
+    expect(geo.dentro(-11.8636, -77.0746)).toBe(false);                            // centro de Puente Piedra
+    expect(geo.dentro(-11.878, -77.127)).toBe(true);                               // Ciudad Satélite
     const puntos = [...st.red()!.nodos.map(([x, y]) => [x, y]), ...st.red()!.bases.map((b) => [b.x, b.y]),
       ...st.incidentes().map((i) => [i.x, i.y])];
-    const mar = puntos.filter(([x, y]) => { const [la, lo] = geo.aLatLng(x, y); return !geo.enTierra(la, lo, 1); });
+    const mar = puntos.filter(([x, y]) => { const [la, lo] = geo.aLatLng(x, y); return !geo.dentro(la, lo); });
     expect(puntos.length).toBeGreaterThan(900);
     expect(mar.length).toBe(0);
 
@@ -119,9 +122,9 @@ describe('Plan de turno (integración con el backend)', () => {
     await pausa(fx, 300);
     expect(el.querySelector('app-plan-mapa-geo .leaflet-popup-content')?.textContent).toMatch(/\d+ serenazgos a cargo/);
     console.log('POPUP PLAN:', el.querySelector('app-plan-mapa-geo .leaflet-popup-content')?.textContent);
-    const ps = TestBed.inject(PlanStore), g2 = crearGeo(TestBed.inject(DespachoStore).red()!.limites);
+    const ps = TestBed.inject(PlanStore), g2 = crearGeo(TestBed.inject(DespachoStore).red()!);
     const enMar = [...ps.vista()!.eventos.map((e) => [e.x, e.y]), ...ps.vista()!.serenazgos.map((s) => [s.x, s.y])]
-      .filter(([x, y]) => { const [la, lo] = g2.aLatLng(x, y); return !g2.enTierra(la, lo, 1); });
+      .filter(([x, y]) => { const [la, lo] = g2.aLatLng(x, y); return !g2.dentro(la, lo); });
     expect(enMar.length).toBe(0);
     const hora0 = el.querySelector('.reloj .hora')?.textContent;
 

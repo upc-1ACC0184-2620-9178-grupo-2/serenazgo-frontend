@@ -19,14 +19,14 @@ Pruebas de integración (necesitan el backend en el puerto 8000): `npm test`.
 
 ## Mapa (Ventanilla, Callao)
 Los mapas usan **Leaflet + OpenStreetMap**, como Google Maps: se arrastra para mover, rueda/doble clic/botones para el zoom,
-escala en metros y botón **Centrar**. Se puede explorar **toda Lima y el Callao** (alejando el zoom), pero el mapa arranca encuadrado en Ventanilla, la zona de operación se resalta (recuadro punteado, lo demás atenuado) y el botón **Centrar en Ventanilla** vuelve a ella. Los clics para ubicar eventos solo valen dentro de la zona.
-- **Todo queda en tierra firme.** El área de operación (recuadro punteado, 8 × 5 km) está tierra adentro de Ventanilla:
-  lat -11.8375 a -11.8825 y lng -77.1368 a -77.0633, a ≈2 km del mar. `geo.ts` incluye la línea de costa real (puntos de playa
-  de OEFA y MINSA/DIGESA) y bloquea los clics en el mar o fuera del área. La prueba de integración verifica que la red vial,
-  las bases, los incidentes, los eventos y los serenazgos queden a ≥ 1 km de la costa.
-- `src/app/core/geo.ts` convierte las coordenadas del backend a latitud/longitud. Con la red **simulada** (km) el plano se ancla al
-  centro del área de operación (-11.860, -77.100); con la red **real** (`RED=osmnx` en el backend) usa las coordenadas reales sin cambios.
-- **Clic en una base** → popup con los serenazgos que tiene a cargo (por tipo, libres/ocupadas y sus eventos).
+escala en metros y botón **Centrar**. Se puede explorar **toda Lima y el Callao** (alejando el zoom), pero el mapa arranca encuadrado en Ventanilla, el contorno del distrito se resalta (línea punteada, lo demás atenuado) y el botón **Centrar en Ventanilla** vuelve a él. Los clics para ubicar eventos solo valen dentro del distrito.
+- **Todo queda dentro de Ventanilla.** El backend genera la red vial, las bases, los incidentes, los eventos y los serenazgos solo dentro
+  del **contorno oficial del distrito** (IGN) y lo envía en `/api/red` (`distrito`, `anclaje`). El mapa dibuja ese límite (línea punteada),
+  atenúa el resto de Lima y rechaza los clics fuera de Ventanilla (Puente Piedra, Mi Perú, el mar...). La prueba de integración verifica
+  que todos los puntos generados caigan dentro del polígono.
+- `src/app/core/geo.ts` convierte las coordenadas del backend a latitud/longitud. Con la red **simulada**, el plano está en km con
+  origen en el centro de Ventanilla (`anclaje`), así que cada punto queda en su lugar real; con la red **real** (`RED=osmnx`) se usan
+  las coordenadas tal cual.
 - La red vial simulada se puede ver u ocultar en el control de capas del mapa (arriba a la derecha). Mientras la red sea simulada,
   las rutas dibujadas **no siguen las calles reales**; con OSMnx sí.
 - Los mosaicos vienen del servidor público de OpenStreetMap (uso moderado, con atribución). Para mucho tráfico usa un proveedor
