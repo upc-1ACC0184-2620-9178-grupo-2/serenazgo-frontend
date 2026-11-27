@@ -5,6 +5,7 @@ import { PRIORIDAD } from '../core/models';
 import { PlanStore } from '../core/plan.store';
 import { crearMapa, encuadrar, iconoBase, iconoEvento, popupBase, resumenPorTipo } from './mapa-base';
 
+const COLOR_BASE = ['#2F5597', '#0F6E56', '#8A4FBF', '#B45309'];     // un color por base
 const COLOR_ESTADO: Record<string, string> = {
   libre: '#1F8F55', en_camino: '#F2A71B', atendiendo: '#C62839', baja: '#9AA3B5',
 };
@@ -23,6 +24,7 @@ export class PlanMapaGeoComponent implements OnDestroy {
   private calles = L.layerGroup();
   private bases = L.layerGroup();
   private lineas = L.layerGroup();
+  private salidas = L.layerGroup();
   private eventos = L.layerGroup();
   private unidades = L.layerGroup();
   private listo = signal(false);
@@ -34,8 +36,9 @@ export class PlanMapaGeoComponent implements OnDestroy {
       const g = this.geo();
       if (!g || this.map) return;
       const map = this.map = crearMapa(this.host().nativeElement, g);
-      [this.calles, this.lineas, this.bases, this.eventos, this.unidades].forEach((l) => l.addTo(map));
-      L.control.layers(undefined, { 'Red vial simulada': this.calles }, { collapsed: true, position: 'topright' }).addTo(map);
+      [this.calles, this.salidas, this.lineas, this.bases, this.eventos, this.unidades].forEach((l) => l.addTo(map));
+      L.control.layers(undefined, { 'Salidas desde las bases': this.salidas, 'Red vial simulada': this.calles },
+        { collapsed: true, position: 'topright' }).addTo(map);
       map.removeLayer(this.calles);                         // por defecto solo se ve el mapa real
       map.on('click', (e: L.LeafletMouseEvent) => {
         if (!this.store.modoAgregar()) return;
@@ -108,6 +111,22 @@ export class PlanMapaGeoComponent implements OnDestroy {
       if (pe.length > 1) L.polyline(pe, { color: '#2F5597', weight: 2, dashArray: '4 5', opacity: 0.8, interactive: false }).addTo(this.lineas);
       R?.movimientos.forEach((m) => L.polyline([g.aLatLng(m.desde[0], m.desde[1]), g.aLatLng(m.hacia[0], m.hacia[1])],
         { color: '#2F5597', weight: 1.5, dashArray: '3 4', opacity: 0.6, interactive: false }).addTo(this.lineas));
+    });
+
+    // trayectoria de las bases: de cada base a los puestos de patrullaje donde quedó cada serenazgo
+    effect(() => {
+      const v = this.store.vista(), g = this.geo();
+      if (!this.listo() || !v || !g) return;
+      this.salidas.clearLayers();
+      const base = new Map(v.bases.map((b) => [b.id, b]));
+      v.serenazgos.filter((s) => s.puesto).forEach((s) => {
+        const b = base.get(s.id_base);
+        if (!b || !s.puesto) return;
+        const color = COLOR_BASE[s.id_base % COLOR_BASE.length], p = g.aLatLng(s.puesto.x, s.puesto.y);
+        L.polyline([g.aLatLng(b.x, b.y), p], { color, weight: 1.6, opacity: 0.6, dashArray: '2 5', interactive: false }).addTo(this.salidas);
+        L.circleMarker(p, { radius: 4, color, weight: 2, fillColor: '#fff', fillOpacity: 1, bubblingMouseEvents: false })
+          .bindTooltip(`Puesto de ${s.etiqueta} · salió de ${b.nombre} (${s.puesto.minutos} min)`).addTo(this.salidas);
+      });
     });
 
     effect(() => {

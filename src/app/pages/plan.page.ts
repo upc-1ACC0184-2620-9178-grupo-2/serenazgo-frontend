@@ -28,6 +28,8 @@ const FILAS: [string, string][] = [
         <p class="eyebrow">Turno de {{ v.turno.horas }} horas · {{ v.turno.inicio.slice(0, 10) }}</p>
         <p class="hora" aria-label="Hora actual">{{ store.horaViva() || v.turno.hora }}</p>
         <p class="modo" [class.vivo]="v.turno.tiempo_real">{{ modo() }}</p>
+        <p class="trafico" [class]="'trafico tr-' + v.turno.trafico.nivel.replace(' ', '-')">
+          Tráfico: <b>{{ v.turno.trafico.nivel }}</b> · avenidas ×{{ v.turno.trafico.arterial }} · calles ×{{ v.turno.trafico.local }}</p>
         <div class="barra" role="progressbar" aria-label="Avance del turno" aria-valuemin="0" aria-valuemax="100"
              [attr.aria-valuenow]="avance()"><i [style.width.%]="avance()"></i></div>
         <p class="sub">{{ store.hora(0) }} → {{ store.hora(v.turno.duracion_min) }}</p>
@@ -42,7 +44,7 @@ const FILAS: [string, string][] = [
             </select>
           </div>
           <p class="sub">El reloj sigue la hora de {{ v.turno.zona_horaria }}. Los accidentes y demás eventos llegan solos
-            (≈{{ v.turno.eventos_por_hora }} por hora) y el plan se reasigna al instante.</p>
+            (≈{{ v.turno.eventos_por_hora }} por hora) y cada uno va al serenazgo que <b>llega antes</b> con el tráfico de esta hora; los libres se reacomodan solos cada 20 min.</p>
         } @else {
           <span class="lbl">Avanzar el reloj (simulación)</span>
           <div class="fila-btn">
@@ -124,6 +126,7 @@ const FILAS: [string, string][] = [
             <li><svg width="10" height="10"><circle cx="5" cy="5" r="4" class="u-en_camino"/></svg> en camino</li>
             <li><svg width="10" height="10"><circle cx="5" cy="5" r="4" class="u-atendiendo"/></svg> atendiendo</li>
             <li><svg width="10" height="10"><circle cx="5" cy="5" r="4" class="u-baja"/></svg> baja</li>
+            <li>┄ salida desde la base</li>
           </ul>
         </div>
         <div class="mapa-caja" [class.modo-ubicar]="store.modoAgregar()"><app-plan-mapa-geo /></div>
@@ -168,7 +171,7 @@ const FILAS: [string, string][] = [
               @for (t of s.tareas; track $index) {
                 <li [class.cancelada]="t.tipo === 'cancelada'">
                   <b>{{ store.hora(t.inicio) }}–{{ store.hora(t.fin) }}</b>
-                  @if (t.tipo === 'reposicion') { Reposición } @else { Evento {{ t.evento_id }}{{ t.retraso > 0 ? ' · retraso ' + t.retraso + ' min' : '' }} }
+                  @if (t.tipo === 'reposicion') { Traslado a su puesto de patrullaje } @else { Evento {{ t.evento_id }}{{ t.retraso > 0 ? ' · retraso ' + t.retraso + ' min' : '' }} }
                 </li>
               } @empty { <li>Sin tareas asignadas.</li> }
             </ol>

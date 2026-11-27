@@ -63,6 +63,8 @@ export type EstadoSerenazgo = 'libre' | 'en_camino' | 'atendiendo' | 'baja';
 export interface PlanSerenazgo {
   id: number; etiqueta: string; tipo: string; id_base: number; en_servicio: boolean;
   estado: EstadoSerenazgo; x: number; y: number; eventos: number[]; carga_min: number;
+  /** puesto de patrullaje al que salió desde su base al empezar el turno */
+  puesto: { x: number; y: number; minutos: number } | null;
   utilizacion_pct: number; tareas: PlanTarea[];
 }
 export type EstadoEvento = 'asignado' | 'en_camino' | 'atendiendo' | 'atendido' | 'cancelado' | 'sin_cobertura';
@@ -82,6 +84,7 @@ export interface PlanVista {
   turno: {
     inicio: string; fin: string; horas: number; duracion_min: number; ahora_min: number; ahora: string; hora: string;
     tiempo_real: boolean; velocidad: number; zona_horaria: string; eventos_por_hora: number;
+    trafico: { arterial: number; local: number; nivel: string };
   };
   estrategia: string; estrategias: { nombre: string; descripcion: string }[];
   serenazgos: PlanSerenazgo[]; eventos: PlanEvento[]; sin_cobertura: number[];

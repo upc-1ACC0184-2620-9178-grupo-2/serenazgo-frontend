@@ -42,7 +42,7 @@ export class PlanTimelineComponent {
         const e = t.evento_id != null ? this.store.eventosPorId().get(t.evento_id) : undefined;
         const clase = t.tipo === 'reposicion' ? 'g-rep' : t.tipo === 'cancelada' ? 'g-can' : 'g-' + (e?.prioridad ?? 'M');
         const titulo = t.tipo === 'reposicion'
-          ? `Reposición ${this.store.hora(t.salida)}–${this.store.hora(t.fin)}`
+          ? `Traslado a puesto de patrullaje ${this.store.hora(t.salida)}–${this.store.hora(t.fin)}`
           : `Evento ${t.evento_id}${e ? ' · ' + e.tipologia : ''} · ${this.store.hora(t.inicio)}–${this.store.hora(t.fin)}`
             + (t.retraso > 0 ? ` · retraso ${t.retraso} min` : '');
         return { x: X(t.inicio), w: Math.max(2, X(t.fin) - X(t.inicio)), clase, titulo,
