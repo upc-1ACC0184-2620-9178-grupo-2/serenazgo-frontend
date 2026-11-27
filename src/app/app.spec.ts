@@ -107,6 +107,9 @@ describe('Plan de turno (integración con el backend)', () => {
     await new Promise((r) => setTimeout(r, 2200)); fx.detectChanges();
     expect(el.querySelector('.reloj .hora')?.textContent).not.toBe(txt);           // el reloj corre cada segundo
     expect(el.querySelector('.actividad')).toBeTruthy();
+    expect(el.querySelector('.trafico')?.textContent).toContain('Tráfico');                    // tráfico por horarios
+    expect(el.querySelector('app-plan-mapa-geo .leaflet-control-layers')?.textContent).toContain('Salidas desde las bases');
+    expect(TestBed.inject(PlanStore).vista()!.serenazgos.filter((s) => s.puesto).length).toBeGreaterThan(90);   // salieron a patrullar
     console.log('EN VIVO:', txt, '->', el.querySelector('.reloj .hora')?.textContent, '|', el.querySelector('.modo')?.textContent);
 
     // simulación manual para el resto de la prueba
@@ -116,7 +119,7 @@ describe('Plan de turno (integración con el backend)', () => {
     expect(el.querySelectorAll('.agenda .item').length).toBeGreaterThan(10);
     expect(el.querySelectorAll('app-plan-mapa-geo .leaflet-container').length).toBe(1);
     expect(el.querySelectorAll('app-plan-mapa-geo .ev').length).toBeGreaterThan(50);                 // eventos
-    expect(el.querySelectorAll('app-plan-mapa-geo path.leaflet-interactive').length).toBe(100);     // 100 serenazgos
+    expect(el.querySelectorAll('app-plan-mapa-geo path.leaflet-interactive').length).toBeGreaterThanOrEqual(100);   // 100 serenazgos (+ sus puestos)
     expect(el.querySelectorAll('app-plan-timeline .fila').length).toBeGreaterThan(5);
     (el.querySelector('app-plan-mapa-geo .base-ico') as HTMLElement).click();
     await pausa(fx, 300);

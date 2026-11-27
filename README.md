@@ -13,7 +13,7 @@ Pruebas de integración (necesitan el backend en el puerto 8000): `npm test`.
 
 ## Pantallas
 - **Despacho:** asignación 1 unidad ↔ 1 incidente (Figura 4 del informe).
-- **Plan de turno (en vivo):** el reloj sigue la **hora real de Lima** (con segundos), la página se actualiza sola cada pocos segundos, los accidentes y demás eventos nuevos se integran al instante con un aviso, y el panel *Actividad en vivo* los lista. Hay modo *Demo ×10/×60/×300* y modo simulado manual. El día de 8 horas de 100+ serenazgos: reloj, mapa, agenda por serenazgo (eventos 1 y 2 → serenazgo 1…),
+- **Plan de turno (en vivo):** el reloj sigue la **hora real de Lima** (con segundos), la página se actualiza sola cada pocos segundos, los accidentes y demás eventos nuevos se integran al instante con un aviso, y el panel *Actividad en vivo* los lista. El encabezado muestra el **tráfico de la hora** (hora punta, intenso, moderado, fluido). Los serenazgos aparecen **afuera, en patrullaje**: la capa *Salidas desde las bases* (control de capas del mapa) dibuja la trayectoria de cada base a los puestos donde quedó cada unidad, y al seleccionar un serenazgo se ve su recorrido completo (base → puesto → eventos). Hay modo *Demo ×10/×60/×300* y modo simulado manual. El día de 8 horas de 100+ serenazgos: reloj, mapa, agenda por serenazgo (eventos 1 y 2 → serenazgo 1…),
   línea de tiempo, cancelar y reasignar, redistribuir libres, "¿qué pasa si…?" y comparación de estrategias.
 - Incidentes, Unidades, Rutas y Reportes.
 

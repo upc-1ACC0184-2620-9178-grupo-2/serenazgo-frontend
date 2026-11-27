@@ -246,3 +246,11 @@ app-forma{display:inline-flex;vertical-align:middle}
 .act li{padding:6px 10px;background:#F4F6FB;border-radius:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .act li b{font-variant-numeric:tabular-nums}
 #minimapa svg{max-height:240px}
+
+/* Tráfico por horarios */
+.trafico{font-size:12px;margin:0 0 6px;padding:3px 10px;border-radius:10px;background:#EEF1F7;color:#56627F}
+.trafico b{text-transform:capitalize}
+.tr-hora-punta{background:#FDE4E7;color:#8E1A28}
+.tr-intenso{background:#FFF1C9;color:#5C4200}
+.tr-moderado{background:#EAF3FB;color:#1F4E79}
+.tr-fluido{background:#DDF3E7;color:#14532D}
